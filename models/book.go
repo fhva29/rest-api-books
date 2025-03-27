@@ -9,7 +9,7 @@ type Book struct {
 	Title       string
 	Genre       string
 	Year        int
-	Description string
+	Description *string `gorm:"type:text"`
 
 	AuthorID uint
 	Author   Author

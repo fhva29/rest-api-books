@@ -9,4 +9,5 @@ import (
 func InitializeRoutes(r *gin.Engine) {
 	controllers.InitializeControllers()
 	AuthorRoutes(r)
+	BookRoutes(r)
 }

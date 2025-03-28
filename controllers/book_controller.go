@@ -85,3 +85,81 @@ func GetBook(ctx *gin.Context) {
 
 	responses.SendSuccess(ctx, responses.ToBookResponse(book))
 }
+
+func UpdateBook(ctx *gin.Context) {
+	id := ctx.Param("id")
+
+	bookId, err := strconv.Atoi(id)
+	if err != nil {
+		responses.SendError(ctx, http.StatusBadRequest, "id must be a valid integer")
+		return
+	}
+
+	var request requests.CrateBookRequest
+	if err := ctx.BindJSON(&request); err != nil {
+		responses.SendError(ctx, http.StatusBadRequest, "Invalid request")
+		return
+	}
+
+	if err := request.Validate(); err != nil {
+		responses.SendError(ctx, http.StatusBadRequest, "Request validation error", err)
+		return
+	}
+
+	var author models.Author
+	if err := db.First(&author, request.AuthorID).Error; err != nil {
+		responses.SendError(ctx, http.StatusBadRequest, "Author not found")
+		return
+	}
+
+	var book models.Book
+	if err := db.Preload("Author").First(&book, bookId).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			responses.SendError(ctx, http.StatusNotFound, fmt.Sprintf("Book with id %d not found", bookId))
+		} else {
+			responses.SendError(ctx, http.StatusInternalServerError, "Database error")
+		}
+		return
+	}
+
+	updatedBook := models.Book{
+		Title:       request.Title,
+		Genre:       request.Genre,
+		Year:        request.Year,
+		Description: request.Description,
+		AuthorID:    request.AuthorID,
+	}
+
+	if err := db.Model(&book).Updates(updatedBook).Error; err != nil {
+		responses.SendError(ctx, http.StatusInternalServerError, fmt.Sprintf("Error updating book with id: %d", bookId))
+		return
+	}
+
+	responses.SendSuccess(ctx, responses.ToBookResponse(book))
+}
+
+func DeleteBook(ctx *gin.Context) {
+	id := ctx.Param("id")
+
+	bookId, err := strconv.Atoi(id)
+	if err != nil {
+		responses.SendError(ctx, http.StatusBadRequest, "id must be a valid integer")
+		return
+	}
+
+	var book models.Book
+	if err := db.First(&book, bookId).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			responses.SendError(ctx, http.StatusNotFound, fmt.Sprintf("Book with id %d not found", bookId))
+		} else {
+			responses.SendError(ctx, http.StatusInternalServerError, "Database error")
+		}
+		return
+	}
+
+	if err := db.Delete(&book).Error; err != nil {
+		responses.SendError(ctx, http.StatusInternalServerError, fmt.Sprintf("Error deleting book with id %d", bookId))
+	}
+
+	ctx.JSON(http.StatusNoContent, gin.H{})
+}

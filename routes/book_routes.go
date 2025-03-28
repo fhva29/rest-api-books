@@ -12,11 +12,7 @@ func BookRoutes(r *gin.Engine) {
 		book.POST("/", controllers.CreateBook)
 		book.GET("/", controllers.ListBooks)
 		book.GET("/:id", controllers.GetBook)
-		book.PUT("/:id", func(ctx *gin.Context) {
-			ctx.JSON(200, gin.H{"message": "PUT Book"})
-		})
-		book.DELETE("/:id", func(ctx *gin.Context) {
-			ctx.JSON(200, gin.H{"message": "DELETE Book"})
-		})
+		book.PUT("/:id", controllers.UpdateBook)
+		book.DELETE("/:id", controllers.DeleteBook)
 	}
 }

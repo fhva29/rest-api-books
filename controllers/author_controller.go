@@ -157,7 +157,7 @@ func UpdateAuthor(ctx *gin.Context) {
 
 	// Update no autor
 	if err := db.Model(&author).Updates(newAuthor).Error; err != nil {
-		responses.SendError(ctx, http.StatusInternalServerError, fmt.Sprintf("Error updating book with id: %d", authorID))
+		responses.SendError(ctx, http.StatusInternalServerError, fmt.Sprintf("Error updating author with id: %d", authorID))
 		return
 	}
 
